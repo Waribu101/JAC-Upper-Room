@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "JAC Upper Room",
+    "slug": "jac-upper-room",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/jac-logo.jpg",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1A2B6B"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jacupperroom.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1A2B6B"
+      },
+      "package": "com.jacupperroom.app"
+    },
+    "web": {
+      "favicon": "./assets/images/jac-logo.jpg",
+      "bundler": "metro",
+      "name": "JAC Upper Room",
+      "shortName": "JAC",
+      "description": "The official app of JAC Upper Room, Kabati, Thika.",
+      "themeColor": "#1A2B6B",
+      "backgroundColor": "#1A2B6B"
+    },
+    "scheme": "jac-upper-room"
+  }
+}

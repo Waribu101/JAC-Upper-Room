@@ -1,0 +1,22 @@
+{
+  "name": "JAC Upper Room",
+  "short_name": "JAC",
+  "description": "The official app of JAC Upper Room, Kabati, Thika.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1A2B6B",
+  "theme_color": "#1A2B6B",
+  "icons": [
+    {
+      "src": "/assets/images/jac-logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/assets/images/jac-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
