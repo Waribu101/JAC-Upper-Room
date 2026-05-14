@@ -129,7 +129,7 @@ export default function MoreScreen() {
       <SectionHeader title="ADMIN" />
 <TouchableOpacity
   style={styles.adminBtn}
-  onPress={() => Linking.openURL('https://jac-upper-room.vercel.app/dashboard')}
+  onPress={() => Linking.openURL('https://jac-upper-room.vercel.app/#/dashboard')}
 >
   <Text style={styles.adminBtnText}>⚙️  Admin Panel</Text>
 </TouchableOpacity>
