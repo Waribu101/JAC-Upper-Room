@@ -10,11 +10,32 @@
     <link rel="icon" type="image/jpeg" href="/assets/images/jac-logo.jpg" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body, #root { height: 100%; width: 100%; }
       body { background-color: #1A2B6B; }
-      #root { height: 100vh; }
+      #root { display: flex; flex-direction: column; }
+      #splash {
+        position: fixed; inset: 0;
+        background: #1A2B6B;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999; transition: opacity 0.3s ease;
+      }
+      #splash.hidden { opacity: 0; pointer-events: none; }
+      #splash-text {
+        color: #E8943A; font-size: 22px;
+        font-family: sans-serif; font-weight: bold; letter-spacing: 2px;
+      }
     </style>
   </head>
   <body>
+    <div id="splash"><div id="splash-text">JAC Upper Room</div></div>
     <div id="root"></div>
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var splash = document.getElementById('splash');
+          if (splash) splash.classList.add('hidden');
+        }, 800);
+      });
+    </script>
   </body>
 </html>
