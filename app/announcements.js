@@ -68,8 +68,10 @@ export default function AnnouncementsScreen() {
 
   useEffect(() => {
     loadAnnouncements(activeFilter);
+    const interval = setInterval(() => loadAnnouncements(activeFilter), 30000);
+    return () => clearInterval(interval);
   }, [activeFilter]);
-
+  
   return (
     <View style={styles.container}>
       {/* Filter Bar */}
