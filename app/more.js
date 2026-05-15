@@ -131,7 +131,7 @@ export default function MoreScreen() {
   style={styles.adminBtn}
   onPress={() => {
     if (typeof window !== 'undefined') {
-      window.location.href = '/dashboard';
+      window.location.assign('/dashboard');
     }
   }}
 >
