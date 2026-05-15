@@ -5,7 +5,7 @@ import {
   Linking, RefreshControl, Image,
 } from 'react-native';
 import { Colors } from '../constants/colors';
-import { getMedia } from '../lib/firestore';
+import { getMedia, getLiveLink } from '../lib/firestore';
 
 const TABS = [
   { id: 'photos', label: '📷 Photos' },
@@ -13,10 +13,16 @@ const TABS = [
 ];
 
 function LiveBanner() {
+  const [liveUrl, setLiveUrl] = useState('https://www.facebook.com');
+
+  useEffect(() => {
+    getLiveLink().then(url => setLiveUrl(url));
+  }, []);
+
   return (
     <TouchableOpacity
       style={styles.liveBanner}
-      onPress={() => Linking.openURL('https://www.facebook.com')}
+      onPress={() => Linking.openURL(liveUrl)}
       activeOpacity={0.85}
     >
       <View style={styles.liveDot} />

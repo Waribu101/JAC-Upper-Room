@@ -9,6 +9,7 @@ import { db } from '../lib/firebase';
 import {
   collection, addDoc, getDocs, deleteDoc,
   doc, orderBy, query, serverTimestamp,
+  setDoc, getDoc,
 } from 'firebase/firestore';
 
 // ─── Login Screen ─────────────────────────────────────────
@@ -37,9 +38,7 @@ function LoginScreen() {
       <View style={styles.loginCard}>
         <Text style={styles.loginTitle}>Admin Login</Text>
         <Text style={styles.loginSubtitle}>JAC Upper Room</Text>
-
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -129,7 +128,6 @@ function AnnouncementsSection() {
       <TextInput style={styles.input} placeholder="Title" placeholderTextColor={Colors.textMuted} value={title} onChangeText={setTitle} />
       <TextInput style={[styles.input, styles.textArea]} placeholder="Body" placeholderTextColor={Colors.textMuted} value={body} onChangeText={setBody} multiline numberOfLines={4} />
       <TextInput style={styles.input} placeholder="Posted By" placeholderTextColor={Colors.textMuted} value={postedBy} onChangeText={setPostedBy} />
-
       <Text style={styles.fieldLabel}>Department</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
         {DEPTS.map(d => (
@@ -142,11 +140,9 @@ function AnnouncementsSection() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-
       <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
         {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Post Announcement</Text>}
       </TouchableOpacity>
-
       <Text style={styles.sectionLabel}>Existing Announcements</Text>
       {items.map(item => (
         <View key={item.id} style={styles.listItem}>
@@ -159,6 +155,138 @@ function AnnouncementsSection() {
           </TouchableOpacity>
         </View>
       ))}
+    </View>
+  );
+}
+
+// ─── Photos Section ───────────────────────────────────────
+function PhotosSection() {
+  const [url, setUrl] = useState('');
+  const [caption, setCaption] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [items, setItems] = useState([]);
+
+  async function load() {
+    const q = query(collection(db, 'media'), orderBy('order', 'asc'));
+    const snap = await getDocs(q);
+    setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(d => d.type === 'photo'));
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function handleAdd() {
+    if (!url) return;
+    setSaving(true);
+    await addDoc(collection(db, 'media'), {
+      type: 'photo', url, caption, order: Date.now(),
+    });
+    setUrl(''); setCaption('');
+    await load();
+    setSaving(false);
+  }
+
+  async function handleDelete(id) {
+    await deleteDoc(doc(db, 'media', id));
+    await load();
+  }
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel}>Add Photo</Text>
+      <Text style={styles.fieldLabel}>
+        Tip: Upload to Google Drive or Imgur, then paste the direct image link below
+      </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Photo URL (e.g. https://i.imgur.com/xxx.jpg)"
+        placeholderTextColor={Colors.textMuted}
+        value={url}
+        onChangeText={setUrl}
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Caption (optional)"
+        placeholderTextColor={Colors.textMuted}
+        value={caption}
+        onChangeText={setCaption}
+      />
+      <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
+        {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Add Photo</Text>}
+      </TouchableOpacity>
+      <Text style={styles.sectionLabel}>Existing Photos</Text>
+      {items.length === 0 && (
+        <Text style={styles.emptyHint}>No photos added yet.</Text>
+      )}
+      {items.map(item => (
+        <View key={item.id} style={styles.listItem}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.listItemTitle} numberOfLines={1}>{item.url}</Text>
+            <Text style={styles.listItemSub}>{item.caption || 'No caption'}</Text>
+          </View>
+          <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteBtn}>
+            <Text style={styles.deleteBtnText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ─── Live Link Section ────────────────────────────────────
+function LiveLinkSection() {
+  const [url, setUrl] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const snap = await getDoc(doc(db, 'settings', 'liveLink'));
+        if (snap.exists()) setUrl(snap.data().url || '');
+      } catch (e) {}
+    }
+    load();
+  }, []);
+
+  async function handleSave() {
+    if (!url) return;
+    setSaving(true);
+    await setDoc(doc(db, 'settings', 'liveLink'), { url });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  }
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel}>Facebook Live Link</Text>
+      <Text style={styles.fieldLabel}>
+        Before each service, paste the Facebook Live URL here. Members will tap "Watch Us Live" to join.
+      </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="https://www.facebook.com/live/..."
+        placeholderTextColor={Colors.textMuted}
+        value={url}
+        onChangeText={setUrl}
+        autoCapitalize="none"
+      />
+      <TouchableOpacity style={styles.addButton} onPress={handleSave} disabled={saving}>
+        {saving ? (
+          <ActivityIndicator color={Colors.white} />
+        ) : (
+          <Text style={styles.addButtonText}>
+            {saved ? '✓ Saved!' : 'Update Live Link'}
+          </Text>
+        )}
+      </TouchableOpacity>
+      {url ? (
+        <View style={styles.currentLinkBox}>
+          <Text style={styles.fieldLabel}>Current link:</Text>
+          <Text style={styles.currentLinkText} numberOfLines={2}>{url}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -201,13 +329,11 @@ function SermonsSection() {
       <Text style={styles.sectionLabel}>Add Sermon</Text>
       <TextInput style={styles.input} placeholder="Title" placeholderTextColor={Colors.textMuted} value={title} onChangeText={setTitle} />
       <TextInput style={styles.input} placeholder="Speaker" placeholderTextColor={Colors.textMuted} value={speaker} onChangeText={setSpeaker} />
-      <TextInput style={styles.input} placeholder="Facebook URL" placeholderTextColor={Colors.textMuted} value={url} onChangeText={setUrl} autoCapitalize="none" />
-      <TextInput style={styles.input} placeholder="Date (e.g. May 14, 2026)" placeholderTextColor={Colors.textMuted} value={date} onChangeText={setDate} />
-
+      <TextInput style={styles.input} placeholder="Facebook Video URL" placeholderTextColor={Colors.textMuted} value={url} onChangeText={setUrl} autoCapitalize="none" />
+      <TextInput style={styles.input} placeholder="Date (e.g. May 15, 2026)" placeholderTextColor={Colors.textMuted} value={date} onChangeText={setDate} />
       <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
         {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Add Sermon</Text>}
       </TouchableOpacity>
-
       <Text style={styles.sectionLabel}>Existing Sermons</Text>
       {items.map(item => (
         <View key={item.id} style={styles.listItem}>
@@ -258,11 +384,9 @@ function LeadershipSection() {
       <Text style={styles.sectionLabel}>Add Leader</Text>
       <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor={Colors.textMuted} value={name} onChangeText={setName} />
       <TextInput style={styles.input} placeholder="Role (e.g. Senior Pastor)" placeholderTextColor={Colors.textMuted} value={role} onChangeText={setRole} />
-
       <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
         {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Add Leader</Text>}
       </TouchableOpacity>
-
       <Text style={styles.sectionLabel}>Existing Leadership</Text>
       {items.map(item => (
         <View key={item.id} style={styles.listItem}>
@@ -317,11 +441,9 @@ function ServicesSection() {
       <TextInput style={styles.input} placeholder="Day (e.g. Sunday)" placeholderTextColor={Colors.textMuted} value={day} onChangeText={setDay} />
       <TextInput style={styles.input} placeholder="Time (e.g. 10:00 AM)" placeholderTextColor={Colors.textMuted} value={time} onChangeText={setTime} />
       <TextInput style={styles.input} placeholder="Location" placeholderTextColor={Colors.textMuted} value={location} onChangeText={setLocation} />
-
       <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
         {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Add Service</Text>}
       </TouchableOpacity>
-
       <Text style={styles.sectionLabel}>Existing Services</Text>
       {items.map(item => (
         <View key={item.id} style={styles.listItem}>
@@ -382,11 +504,9 @@ function DepartmentsSection() {
       <TextInput style={[styles.input, styles.textArea]} placeholder="Description" placeholderTextColor={Colors.textMuted} value={description} onChangeText={setDescription} multiline numberOfLines={3} />
       <TextInput style={styles.input} placeholder="Meets (e.g. Every Friday at 6PM)" placeholderTextColor={Colors.textMuted} value={meets} onChangeText={setMeets} />
       <TextInput style={styles.input} placeholder="Leader Name" placeholderTextColor={Colors.textMuted} value={leader} onChangeText={setLeader} />
-
       <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
         {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Add Department</Text>}
       </TouchableOpacity>
-
       <Text style={styles.sectionLabel}>Existing Departments</Text>
       {items.map(item => (
         <View key={item.id} style={styles.listItem}>
@@ -429,6 +549,8 @@ export default function AdminScreen() {
 
   const TABS = [
     { id: 'announcements', label: '📢' },
+    { id: 'photos', label: '📷' },
+    { id: 'live', label: '🔴' },
     { id: 'sermons', label: '🎙️' },
     { id: 'leadership', label: '👤' },
     { id: 'services', label: '🕐' },
@@ -455,6 +577,8 @@ export default function AdminScreen() {
       {/* Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {activeTab === 'announcements' && <AnnouncementsSection />}
+        {activeTab === 'photos' && <PhotosSection />}
+        {activeTab === 'live' && <LiveLinkSection />}
         {activeTab === 'sermons' && <SermonsSection />}
         {activeTab === 'leadership' && <LeadershipSection />}
         {activeTab === 'services' && <ServicesSection />}
@@ -488,7 +612,7 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   section: { padding: 16 },
   sectionLabel: { fontSize: 12, fontWeight: '700', color: Colors.secondary, letterSpacing: 1.5, marginTop: 16, marginBottom: 10, textTransform: 'uppercase' },
-  fieldLabel: { fontSize: 12, color: Colors.textMuted, marginBottom: 6, fontWeight: '600' },
+  fieldLabel: { fontSize: 12, color: Colors.textMuted, marginBottom: 6, fontWeight: '500', lineHeight: 18 },
   chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border, marginRight: 8 },
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   chipText: { fontSize: 12, color: Colors.textMuted, fontWeight: '500' },
@@ -500,4 +624,7 @@ const styles = StyleSheet.create({
   listItemSub: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
   deleteBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
   deleteBtnText: { color: Colors.danger, fontSize: 12, fontWeight: '700' },
+  emptyHint: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', marginVertical: 12 },
+  currentLinkBox: { backgroundColor: Colors.white, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: Colors.border, marginTop: 8 },
+  currentLinkText: { fontSize: 13, color: Colors.primary, marginTop: 4, fontWeight: '500' },
 });
