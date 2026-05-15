@@ -9,6 +9,7 @@ import AnnouncementsScreen from './app/announcements';
 import DepartmentsScreen from './app/departments';
 import MediaScreen from './app/media';
 import MoreScreen from './app/more';
+import DashboardScreen from './app/dashboard';
 
 const Tab = createBottomTabNavigator();
 
@@ -23,6 +24,7 @@ function MainTabs() {
             Departments: 'people-outline',
             Media: 'images-outline',
             More: 'menu-outline',
+            Dashboard: 'shield-outline',
           };
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
@@ -39,11 +41,15 @@ function MainTabs() {
       <Tab.Screen name="Departments" component={DepartmentsScreen} />
       <Tab.Screen name="Media" component={MediaScreen} />
       <Tab.Screen name="More" component={MoreScreen} />
+      <Tab.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{ tabBarButton: () => null }}
+      />
     </Tab.Navigator>
   );
 }
 
-// Register PWA service worker
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js').catch(err => {

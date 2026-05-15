@@ -52,7 +52,7 @@ function LeaderCard({ item }) {
   );
 }
 
-export default function MoreScreen() {
+export default function MoreScreen({ navigation }) {
   const [services, setServices] = useState([]);
   const [leadership, setLeadership] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -129,11 +129,7 @@ export default function MoreScreen() {
       <SectionHeader title="ADMIN" />
 <TouchableOpacity
   style={styles.adminBtn}
-  onPress={() => {
-    if (typeof window !== 'undefined') {
-      window.location.assign('/dashboard');
-    }
-  }}
+  onPress={() => navigation.navigate('Dashboard')}
 >
   <Text style={styles.adminBtnText}>⚙️  Admin Panel</Text>
 </TouchableOpacity>
