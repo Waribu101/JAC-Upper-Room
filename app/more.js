@@ -95,12 +95,12 @@ export default function MoreScreen({ navigation }) {
       <View style={styles.contactCard}>
         <TouchableOpacity
           style={styles.contactRow}
-          onPress={() => Linking.openURL('tel:+254700000000')}
+          onPress={() => Linking.openURL('tel:+254723238347')}
         >
           <Text style={styles.contactIcon}>📞</Text>
           <View>
             <Text style={styles.contactLabel}>Phone</Text>
-            <Text style={styles.contactValue}>+254 700 000 000</Text>
+            <Text style={styles.contactValue}>+254 723 238 347</Text>
           </View>
         </TouchableOpacity>
         <View style={styles.contactDivider} />
@@ -111,7 +111,7 @@ export default function MoreScreen({ navigation }) {
           <Text style={styles.contactIcon}>✉️</Text>
           <View>
             <Text style={styles.contactLabel}>Email</Text>
-            <Text style={styles.contactValue}>jacupperroom@gmail.com</Text>
+            <Text style={styles.contactValue}>JACupperroom@gmail.com</Text>
           </View>
         </TouchableOpacity>
         <View style={styles.contactDivider} />
