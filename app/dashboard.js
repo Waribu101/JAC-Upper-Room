@@ -4,7 +4,6 @@ import {
   TouchableOpacity, TextInput, ActivityIndicator,
 } from 'react-native';
 import { Colors } from '../constants/colors';
-import { adminLogin, adminLogout, onAuthChange } from '../lib/auth';
 import { adminLogin, adminLogout, onAuthChange, adminSignUp } from '../lib/auth';
 import { db } from '../lib/firebase';
 import {
