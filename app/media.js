@@ -37,6 +37,21 @@ function LiveBanner() {
   );
 }
 
+function getDriveImageUrl(url) {
+  if (!url) return url;
+  // Handle: https://drive.google.com/file/d/FILE_ID/view...
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) {
+    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  }
+  // Handle: https://drive.google.com/open?id=FILE_ID
+  const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match2) {
+    return `https://drive.google.com/uc?export=view&id=${match2[1]}`;
+  }
+  return url;
+}
+
 function PhotoGrid({ photos }) {
   if (photos.length === 0) {
     return (
@@ -53,7 +68,7 @@ function PhotoGrid({ photos }) {
       {photos.map(item => (
         <TouchableOpacity key={item.id} style={styles.photoCell} activeOpacity={0.8}>
           <Image
-  source={{ uri: item.url }}
+  source={{ uri: getDriveImageUrl(item.url) }}
   style={{
     width: '100%',
     height: '100%',
