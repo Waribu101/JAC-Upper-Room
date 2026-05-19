@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Colors } from '../constants/colors';
 import { adminLogin, adminLogout, onAuthChange } from '../lib/auth';
+import { adminLogin, adminLogout, onAuthChange, adminSignUp } from '../lib/auth';
 import { db } from '../lib/firebase';
 import {
   collection, addDoc, getDocs, deleteDoc,
@@ -14,31 +15,40 @@ import {
 
 // ─── Login Screen ─────────────────────────────────────────
 function LoginScreen() {
+  const [mode, setMode] = useState('login'); // 'login' or 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function handleLogin() {
-    if (!email || !password) {
-      setError('Please enter email and password.');
-      return;
-    }
-    setLoading(true);
-    setError('');
+    if (!email || !password) { setError('Please enter email and password.'); return; }
+    setLoading(true); setError('');
     const result = await adminLogin(email, password);
-    if (!result.success) {
-      setError(result.message);
-    }
+    if (!result.success) setError(result.message);
+    setLoading(false);
+  }
+
+  async function handleSignUp() {
+    if (!email || !password || !confirmPassword || !inviteCode) { setError('All fields are required.'); return; }
+    if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    setLoading(true); setError('');
+    const result = await adminSignUp(email, password, inviteCode);
+    if (!result.success) setError(result.message);
     setLoading(false);
   }
 
   return (
     <View style={styles.loginContainer}>
       <View style={styles.loginCard}>
-        <Text style={styles.loginTitle}>Admin Login</Text>
+        <Text style={styles.loginTitle}>{mode === 'login' ? 'Admin Login' : 'Create Account'}</Text>
         <Text style={styles.loginSubtitle}>JAC Upper Room</Text>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -48,24 +58,58 @@ function LoginScreen() {
           autoCapitalize="none"
           keyboardType="email-address"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={Colors.textMuted}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+
+        <View style={styles.passwordRow}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginBottom: 0 }]}
+            placeholder="Password"
+            placeholderTextColor={Colors.textMuted}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+            <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {mode === 'signup' && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              placeholderTextColor={Colors.textMuted}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Invite Code"
+              placeholderTextColor={Colors.textMuted}
+              value={inviteCode}
+              onChangeText={setInviteCode}
+              autoCapitalize="none"
+            />
+          </>
+        )}
+
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={handleLogin}
+          onPress={mode === 'login' ? handleLogin : handleSignUp}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
-            <Text style={styles.loginButtonText}>Login</Text>
+            <Text style={styles.loginButtonText}>{mode === 'login' ? 'Login' : 'Create Account'}</Text>
           )}
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); }}>
+          <Text style={styles.switchModeText}>
+            {mode === 'login' ? "Don't have an account? Sign Up" : 'Already have an account? Login'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -627,4 +671,8 @@ const styles = StyleSheet.create({
   emptyHint: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', marginVertical: 12 },
   currentLinkBox: { backgroundColor: Colors.white, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: Colors.border, marginTop: 8 },
   currentLinkText: { fontSize: 13, color: Colors.primary, marginTop: 4, fontWeight: '500' },
+  passwordRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 },
+eyeBtn: { padding: 10 },
+eyeIcon: { fontSize: 18 },
+switchModeText: { color: Colors.primary, fontSize: 13, textAlign: 'center', marginTop: 14, fontWeight: '600' },
 });
