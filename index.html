@@ -25,6 +25,15 @@
         font-family: sans-serif; font-weight: bold; letter-spacing: 2px;
       }
     </style>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="splash"><div id="splash-text">JAC Upper Room</div></div>
