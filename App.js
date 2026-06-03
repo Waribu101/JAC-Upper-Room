@@ -60,31 +60,6 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   });
 }
 
-function SplashScreen() {
-  return (
-    <View style={splashStyles.container}>
-      <Image
-        source={require('./assets/images/jac-logo.jpg')}
-        style={splashStyles.logo}
-        resizeMode="contain"
-      />
-    </View>
-  );
-}
-
-const splashStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 180,
-    height: 180,
-    borderRadius: 24,
-  },
-});
 
 function SplashScreen() {
   const pulse = useRef(new Animated.Value(1)).current;
