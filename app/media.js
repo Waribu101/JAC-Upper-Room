@@ -117,7 +117,7 @@ function SermonList({ sermons }) {
             <Text style={styles.sermonSpeaker}>{item.speaker}</Text>
             <Text style={styles.sermonDate}>{item.date}</Text>
           </View>
-          <Text style={styles.sermonFb}>f</Text>
+          <Text style={styles.sermonFb}>▶</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -361,9 +361,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   sermonFb: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#1877F2',
+    color: Colors.primary,
     marginLeft: 8,
   },
   emptyState: {

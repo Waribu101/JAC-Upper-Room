@@ -3,6 +3,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from './constants/colors';
 import { AuthProvider } from './lib/authContext';
+import { useState, useEffect } from 'react';
+import { View, Image, StyleSheet } from 'react-native';
 
 import HomeScreen from './app/index';
 import AnnouncementsScreen from './app/announcements';
@@ -58,7 +60,42 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   });
 }
 
+function SplashScreen() {
+  return (
+    <View style={splashStyles.container}>
+      <Image
+        source={require('./assets/images/jac-logo.jpg')}
+        style={splashStyles.logo}
+        resizeMode="contain"
+      />
+    </View>
+  );
+}
+
+const splashStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 180,
+    height: 180,
+    borderRadius: 24,
+  },
+});
+
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showSplash) return <SplashScreen />;
+
   return (
     <AuthProvider>
       <NavigationContainer>

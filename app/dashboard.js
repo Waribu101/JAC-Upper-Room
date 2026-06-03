@@ -303,13 +303,13 @@ function LiveLinkSection() {
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionLabel}>Facebook Live Link</Text>
-      <Text style={styles.fieldLabel}>
-        Before each service, paste the Facebook Live URL here. Members will tap "Watch Us Live" to join.
-      </Text>
-      <TextInput
-        style={styles.input}
-        placeholder="https://www.facebook.com/live/..."
+     <Text style={styles.sectionLabel}>YouTube Live Link</Text>
+<Text style={styles.fieldLabel}>
+  Before each service, paste the YouTube Live URL here. Members will tap "Watch Us Live" to join.
+</Text>
+<TextInput
+  style={styles.input}
+  placeholder="https://www.youtube.com/live/..."
         placeholderTextColor={Colors.textMuted}
         value={url}
         onChangeText={setUrl}
