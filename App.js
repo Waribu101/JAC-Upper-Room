@@ -5,6 +5,8 @@ import { Colors } from './constants/colors';
 import { AuthProvider } from './lib/authContext';
 import { useState, useEffect } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { View, Text, Animated, StyleSheet } from 'react-native';
 
 import HomeScreen from './app/index';
 import AnnouncementsScreen from './app/announcements';
@@ -83,6 +85,142 @@ const splashStyles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 24,
+  },
+});
+
+function SplashScreen() {
+  const pulse = useRef(new Animated.Value(1)).current;
+  const glowOpacity = useRef(new Animated.Value(0.3)).current;
+  const tile1 = useRef(new Animated.Value(0)).current;
+  const tile2 = useRef(new Animated.Value(0)).current;
+  const tile3 = useRef(new Animated.Value(0)).current;
+  const subtitleOpacity = useRef(new Animated.Value(0)).current;
+
+  const tile1Y = useRef(new Animated.Value(30)).current;
+  const tile2Y = useRef(new Animated.Value(30)).current;
+  const tile3Y = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    // Logo pulse — breathes continuously
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.08, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 1200, useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Glow ring pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowOpacity, { toValue: 0.08, duration: 1200, useNativeDriver: true }),
+        Animated.timing(glowOpacity, { toValue: 0.3, duration: 1200, useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Tiles flow in one by one
+    const tileAnim = (opacity, y, delay) =>
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: 400, delay, useNativeDriver: true }),
+        Animated.spring(y, { toValue: 0, delay, useNativeDriver: true, tension: 80, friction: 8 }),
+      ]);
+
+    Animated.sequence([
+      tileAnim(tile1, tile1Y, 300),
+      tileAnim(tile2, tile2Y, 0),
+      tileAnim(tile3, tile3Y, 0),
+      Animated.timing(subtitleOpacity, { toValue: 1, duration: 600, delay: 100, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const tiles = [
+    { label: 'JAC', opacity: tile1, y: tile1Y },
+    { label: 'Upper', opacity: tile2, y: tile2Y },
+    { label: 'Room', opacity: tile3, y: tile3Y },
+  ];
+
+  return (
+    <View style={splash.container}>
+      {/* Glow ring behind logo */}
+      <Animated.View style={[splash.glowRing, { opacity: glowOpacity }]} />
+
+      {/* Pulsing logo */}
+      <Animated.View style={[splash.logoBox, { transform: [{ scale: pulse }] }]}>
+        <Text style={splash.logoText}>JAC</Text>
+      </Animated.View>
+
+      {/* Tile row */}
+      <View style={splash.tilesRow}>
+        {tiles.map(({ label, opacity, y }) => (
+          <Animated.View
+            key={label}
+            style={[splash.tile, { opacity, transform: [{ translateY: y }] }]}
+          >
+            <Text style={splash.tileText}>{label}</Text>
+          </Animated.View>
+        ))}
+      </View>
+
+      {/* Subtitle */}
+      <Animated.Text style={[splash.subtitle, { opacity: subtitleOpacity }]}>
+        KABATI · THIKA · KENYA
+      </Animated.Text>
+    </View>
+  );
+}
+
+const splash = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1B2E5E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glowRing: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  logoBox: {
+    width: 110,
+    height: 110,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 36,
+  },
+  logoText: {
+    fontSize: 38,
+    fontWeight: '800',
+    color: '#1B2E5E',
+    letterSpacing: -1,
+  },
+  tilesRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  tile: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  tileText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 3,
   },
 });
 
