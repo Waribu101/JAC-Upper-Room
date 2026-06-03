@@ -3,8 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from './constants/colors';
 import { AuthProvider } from './lib/authContext';
-import { useState, useEffect } from 'react';
-import { View, Image, StyleSheet } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, Animated, StyleSheet } from 'react-native';
 
