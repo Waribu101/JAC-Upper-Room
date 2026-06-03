@@ -154,7 +154,7 @@ const splash = StyleSheet.create({
     height: 220,
     borderRadius: 110,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: 'rgba(232,150,12,0.45)',
   },
   logoBox: {
     width: 110,
@@ -177,22 +177,22 @@ const splash = StyleSheet.create({
     marginBottom: 14,
   },
   tile: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: 'rgba(232,150,12,0.18)',
+    borderWidth: 1.5,
+    borderColor: '#E8960C',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
   tileText: {
-    color: '#FFFFFF',
+    color: '#E8960C',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(232,150,12,0.6)',
     letterSpacing: 3,
   },
 });
