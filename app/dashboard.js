@@ -372,7 +372,7 @@ function SermonsSection() {
       <Text style={styles.sectionLabel}>Add Sermon</Text>
       <TextInput style={styles.input} placeholder="Title" placeholderTextColor={Colors.textMuted} value={title} onChangeText={setTitle} />
       <TextInput style={styles.input} placeholder="Speaker" placeholderTextColor={Colors.textMuted} value={speaker} onChangeText={setSpeaker} />
-      <TextInput style={styles.input} placeholder="Facebook Video URL" placeholderTextColor={Colors.textMuted} value={url} onChangeText={setUrl} autoCapitalize="none" />
+      <TextInput style={styles.input} placeholder="Video URL (YouTube, Facebook, etc.)" placeholderTextColor={Colors.textMuted} value={url} onChangeText={setUrl} autoCapitalize="none" />
       <TextInput style={styles.input} placeholder="Date (e.g. May 15, 2026)" placeholderTextColor={Colors.textMuted} value={date} onChangeText={setDate} />
       <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
         {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Add Sermon</Text>}

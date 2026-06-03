@@ -13,7 +13,7 @@ const TABS = [
 ];
 
 function LiveBanner() {
-  const [liveUrl, setLiveUrl] = useState('https://www.facebook.com');
+  const [liveUrl, setLiveUrl] = useState('https://www.youtube.com');
 
   useEffect(() => {
     getLiveLink().then(url => setLiveUrl(url));
@@ -29,7 +29,7 @@ function LiveBanner() {
       <View style={styles.liveTextBox}>
         <Text style={styles.liveTitle}>Watch Us Live</Text>
         <Text style={styles.liveSubtitle}>
-          Join our Facebook Live every Sunday at 10AM
+          Join our YouTube Live every Sunday at 10AM
         </Text>
       </View>
       <Text style={styles.liveArrow}>▶</Text>
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   liveBanner: {
-    backgroundColor: '#1877F2',
+    backgroundColor: '#FF0000',
     margin: 16,
     borderRadius: 14,
     padding: 16,
@@ -228,9 +228,9 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#FF0000',
+    backgroundColor: '#FFFFFF',
     marginRight: 14,
-    shadowColor: '#FF0000',
+    shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 4,
