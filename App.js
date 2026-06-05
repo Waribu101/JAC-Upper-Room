@@ -123,7 +123,7 @@ function SplashScreen() {
 
       {/* Tile row */}
       <View style={splash.tilesRow}>
-        {tiles.map(({ label, opacity, y }) => (
+      {tiles.map(({ label, opacity, y, color }) => (
           <Animated.View
           key={label}
           style={[
