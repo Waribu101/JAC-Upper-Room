@@ -16,7 +16,11 @@ function LiveBanner() {
   const [liveUrl, setLiveUrl] = useState('https://www.youtube.com');
 
   useEffect(() => {
-    getLiveLink().then(url => setLiveUrl(url));
+    getLiveLink().then(url => {
+      if (url && !url.includes('facebook.com')) {
+        setLiveUrl(url);
+      }
+    });
   }, []);
 
   return (

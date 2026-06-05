@@ -106,9 +106,9 @@ function SplashScreen() {
   }, []);
 
   const tiles = [
-    { label: 'JAC', opacity: tile1, y: tile1Y },
-    { label: 'Upper', opacity: tile2, y: tile2Y },
-    { label: 'Room', opacity: tile3, y: tile3Y },
+    { label: 'JAC', opacity: tile1, y: tile1Y, color: '#1B2E5E' },
+    { label: 'Upper', opacity: tile2, y: tile2Y, color: '#E8960C' },
+    { label: 'Room', opacity: tile3, y: tile3Y, color: '#E8960C' },
   ];
 
   return (
@@ -125,10 +125,15 @@ function SplashScreen() {
       <View style={splash.tilesRow}>
         {tiles.map(({ label, opacity, y }) => (
           <Animated.View
-            key={label}
-            style={[splash.tile, { opacity, transform: [{ translateY: y }] }]}
-          >
-            <Text style={splash.tileText}>{label}</Text>
+          key={label}
+          style={[
+            splash.tile,
+            { opacity, transform: [{ translateY: y }] },
+            label === 'JAC' && { backgroundColor: '#FFFFFF', borderColor: '#1B2E5E' },
+          ]}
+        >
+          
+            <Text style={[splash.tileText, { color }]}>{label}</Text>
           </Animated.View>
         ))}
       </View>
