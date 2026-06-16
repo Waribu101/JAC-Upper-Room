@@ -7,11 +7,15 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, Animated, StyleSheet } from 'react-native';
 
 import HomeScreen from './app/index';
+import LandingScreen from './app/landing';
 import AnnouncementsScreen from './app/announcements';
 import DepartmentsScreen from './app/departments';
 import MediaScreen from './app/media';
 import MoreScreen from './app/more';
 import DashboardScreen from './app/dashboard';
+import NotesScreen from './app/notes';
+import BibleScreen from './app/bible';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -25,6 +29,8 @@ function MainTabs() {
             Announcements: 'megaphone-outline',
             Departments: 'people-outline',
             Media: 'images-outline',
+            Notes: 'book-outline',
+            Bible: 'book-open-outline',
             More: 'menu-outline',
             Dashboard: 'shield-outline',
           };
@@ -42,6 +48,8 @@ function MainTabs() {
       <Tab.Screen name="Announcements" component={AnnouncementsScreen} />
       <Tab.Screen name="Departments" component={DepartmentsScreen} />
       <Tab.Screen name="Media" component={MediaScreen} />
+      <Tab.Screen name="Notes"  component={NotesScreen} />
+      <Tab.Screen name="Bible"  component={BibleScreen} />
       <Tab.Screen name="More" component={MoreScreen} />
       <Tab.Screen
         name="Dashboard"
@@ -199,14 +207,16 @@ const splash = StyleSheet.create({
 });
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash,   setShowSplash]   = useState(true);
+  const [showLanding,  setShowLanding]  = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 5000);
     return () => clearTimeout(timer);
   }, []);
 
-  if (showSplash) return <SplashScreen />;
+  if (showSplash)  return <SplashScreen />;
+  if (showLanding) return <LandingScreen onEnter={() => setShowLanding(false)} />;
 
   return (
     <AuthProvider>
