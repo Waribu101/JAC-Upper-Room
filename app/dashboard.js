@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, TextInput, ActivityIndicator,
+  TouchableOpacity, TextInput, ActivityIndicator, Image,
 } from 'react-native';
 import { Colors } from '../constants/colors';
 import { adminLogin, adminLogout, onAuthChange, adminSignUp } from '../lib/auth';
@@ -395,10 +395,11 @@ function SermonsSection() {
 
 // ─── Leadership Section ───────────────────────────────────
 function LeadershipSection() {
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [items, setItems] = useState([]);
+  const [name,     setName]     = useState('');
+  const [role,     setRole]     = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [saving,   setSaving]   = useState(false);
+  const [items,    setItems]    = useState([]);
 
   async function load() {
     const q = query(collection(db, 'leadership'), orderBy('order', 'asc'));
@@ -411,8 +412,10 @@ function LeadershipSection() {
   async function handleAdd() {
     if (!name || !role) return;
     setSaving(true);
-    await addDoc(collection(db, 'leadership'), { name, role, order: Date.now() });
-    setName(''); setRole('');
+    await addDoc(collection(db, 'leadership'), {
+      name, role, photoUrl: photoUrl.trim(), order: Date.now(),
+    });
+    setName(''); setRole(''); setPhotoUrl('');
     await load();
     setSaving(false);
   }
@@ -422,26 +425,126 @@ function LeadershipSection() {
     await load();
   }
 
+  async function handleUpdatePhoto(id, url) {
+    const { updateDoc } = await import('firebase/firestore');
+    await updateDoc(doc(db, 'leadership', id), { photoUrl: url });
+    await load();
+  }
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>Add Leader</Text>
-      <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor={Colors.textMuted} value={name} onChangeText={setName} />
-      <TextInput style={styles.input} placeholder="Role (e.g. Senior Pastor)" placeholderTextColor={Colors.textMuted} value={role} onChangeText={setRole} />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Full Name"
+        placeholderTextColor={Colors.textMuted}
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Role (e.g. Bishop)"
+        placeholderTextColor={Colors.textMuted}
+        value={role}
+        onChangeText={setRole}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Photo URL (optional — Imgur, Google Drive, etc.)"
+        placeholderTextColor={Colors.textMuted}
+        value={photoUrl}
+        onChangeText={setPhotoUrl}
+        autoCapitalize="none"
+      />
+      <Text style={styles.fieldLabel}>
+        Tip: Upload the photo to Imgur (imgur.com) and paste the direct .jpg link above.
+      </Text>
+
       <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
-        {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Add Leader</Text>}
+        {saving
+          ? <ActivityIndicator color={Colors.white} />
+          : <Text style={styles.addButtonText}>+ Add Leader</Text>}
       </TouchableOpacity>
+
       <Text style={styles.sectionLabel}>Existing Leadership</Text>
       {items.map(item => (
-        <View key={item.id} style={styles.listItem}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.listItemTitle}>{item.name}</Text>
-            <Text style={styles.listItemSub}>{item.role}</Text>
+        <LeaderAdminCard
+          key={item.id}
+          item={item}
+          onDelete={() => handleDelete(item.id)}
+          onUpdatePhoto={(url) => handleUpdatePhoto(item.id, url)}
+        />
+      ))}
+    </View>
+  );
+}
+
+// ─── Leader Admin Card (with inline photo URL editing) ────
+function LeaderAdminCard({ item, onDelete, onUpdatePhoto }) {
+  const [editing,  setEditing]  = useState(false);
+  const [newUrl,   setNewUrl]   = useState(item.photoUrl || '');
+  const [saving,   setSaving]   = useState(false);
+
+  const initials = item.name
+    .split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
+  async function save() {
+    setSaving(true);
+    await onUpdatePhoto(newUrl.trim());
+    setSaving(false);
+    setEditing(false);
+  }
+
+  return (
+    <View style={styles.leaderAdminCard}>
+      <View style={styles.leaderAdminRow}>
+        {/* Avatar preview */}
+        {item.photoUrl ? (
+          <Image
+            source={{ uri: item.photoUrl }}
+            style={styles.leaderAdminAvatar}
+          />
+        ) : (
+          <View style={[styles.leaderAdminAvatar, styles.leaderAdminAvatarFallback]}>
+            <Text style={styles.leaderAdminInitials}>{initials}</Text>
           </View>
-          <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteBtn}>
-            <Text style={styles.deleteBtnText}>✕</Text>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.listItemTitle}>{item.name}</Text>
+          <Text style={styles.listItemSub}>{item.role}</Text>
+          <TouchableOpacity onPress={() => setEditing(!editing)}>
+            <Text style={styles.editPhotoLink}>
+              {item.photoUrl ? '✏️ Change photo URL' : '📷 Add photo URL'}
+            </Text>
           </TouchableOpacity>
         </View>
-      ))}
+        <TouchableOpacity onPress={onDelete} style={styles.deleteBtn}>
+          <Text style={styles.deleteBtnText}>✕</Text>
+        </TouchableOpacity>
+      </View>
+
+      {editing && (
+        <View style={styles.editPhotoRow}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginBottom: 0 }]}
+            placeholder="Photo URL"
+            placeholderTextColor={Colors.textMuted}
+            value={newUrl}
+            onChangeText={setNewUrl}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            style={styles.savePhotoBtn}
+            onPress={save}
+            disabled={saving}
+          >
+            {saving
+              ? <ActivityIndicator color={Colors.white} size="small" />
+              : <Text style={styles.savePhotoBtnText}>Save</Text>}
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -674,4 +777,13 @@ const styles = StyleSheet.create({
 eyeBtn: { padding: 10 },
 eyeIcon: { fontSize: 18 },
 switchModeText: { color: Colors.primary, fontSize: 13, textAlign: 'center', marginTop: 14, fontWeight: '600' },
+  leaderAdminCard: { backgroundColor: Colors.white, borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: Colors.border },
+  leaderAdminRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  leaderAdminAvatar: { width: 44, height: 44, borderRadius: 22 },
+  leaderAdminAvatarFallback: { backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
+  leaderAdminInitials: { fontSize: 16, fontWeight: '700', color: Colors.white },
+  editPhotoLink: { fontSize: 12, color: Colors.primary, fontWeight: '600', marginTop: 4 },
+  editPhotoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
+  savePhotoBtn: { backgroundColor: Colors.primary, borderRadius: 8, paddingVertical: 10, paddingHorizontal: 14 },
+  savePhotoBtnText: { color: Colors.white, fontSize: 13, fontWeight: '700' },
 });

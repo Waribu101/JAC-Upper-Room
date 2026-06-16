@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, Linking, ActivityIndicator,
+  TouchableOpacity, Linking, ActivityIndicator, Image,
 } from 'react-native';
 import { Colors } from '../constants/colors';
 import { getServices, getLeadership } from '../lib/firestore';
@@ -41,9 +41,16 @@ function LeaderCard({ item }) {
 
   return (
     <View style={styles.leaderCard}>
-      <View style={styles.leaderAvatar}>
-        <Text style={styles.leaderInitials}>{initials}</Text>
-      </View>
+      {item.photoUrl ? (
+        <Image
+          source={{ uri: item.photoUrl }}
+          style={styles.leaderPhoto}
+        />
+      ) : (
+        <View style={styles.leaderAvatar}>
+          <Text style={styles.leaderInitials}>{initials}</Text>
+        </View>
+      )}
       <View style={styles.leaderInfo}>
         <Text style={styles.leaderName}>{item.name}</Text>
         <Text style={styles.leaderRole}>{item.role}</Text>
@@ -177,6 +184,10 @@ const styles = StyleSheet.create({
     width: 48, height: 48, borderRadius: 24,
     backgroundColor: Colors.primary, alignItems: 'center',
     justifyContent: 'center', marginRight: 14,
+  },
+  leaderPhoto: {
+    width: 48, height: 48, borderRadius: 24,
+    marginRight: 14, borderWidth: 1.5, borderColor: Colors.border,
   },
   leaderInitials: { fontSize: 18, fontWeight: '700', color: Colors.white },
   leaderInfo: { flex: 1 },
