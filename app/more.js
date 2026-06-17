@@ -59,6 +59,76 @@ function LeaderCard({ item }) {
   );
 }
 
+// ─── App Guide ────────────────────────────────────────────
+const GUIDE_ITEMS = [
+  {
+    icon: '🏠',
+    title: 'Home',
+    desc: "Your daily landing screen. See today's quote, our mission, quick links to key sections, and our church vision.",
+  },
+  {
+    icon: '📢',
+    title: 'Announcements',
+    desc: 'Stay updated with the latest news from JAC Upper Room — services, events, and department updates posted by our admin team.',
+  },
+  {
+    icon: '👥',
+    title: 'Departments',
+    desc: 'Explore our church departments — Men, Women, Youth, Sunday School, and more. Find out who leads each group and when they meet.',
+  },
+  {
+    icon: '🎬',
+    title: 'Media',
+    desc: 'Watch recorded sermons, browse church photos, and join us live on YouTube during services.',
+  },
+  {
+    icon: '📝',
+    title: 'Notes',
+    desc: 'Take personal notes during a service or Bible study. Your notes are saved to your device and synced securely — create, read, and delete anytime.',
+  },
+  {
+    icon: '📖',
+    title: 'Bible (KJV)',
+    desc: 'Read the King James Version of the Bible. Browse by book and chapter, and navigate forward and backward between chapters.',
+  },
+  {
+    icon: '☰',
+    title: 'More',
+    desc: "You're here! Find service times, meet our leadership, contact us, and access the admin panel if you have credentials.",
+  },
+];
+
+function AppGuide() {
+  const [expanded, setExpanded] = useState(null);
+
+  return (
+    <View style={styles.guideWrap}>
+      {GUIDE_ITEMS.map((item, index) => {
+        const isOpen = expanded === index;
+        return (
+          <TouchableOpacity
+            key={item.title}
+            style={[styles.guideRow, isOpen && styles.guideRowOpen]}
+            onPress={() => setExpanded(isOpen ? null : index)}
+            activeOpacity={0.75}
+          >
+            <View style={styles.guideTop}>
+              <View style={styles.guideIconBox}>
+                <Text style={styles.guideIcon}>{item.icon}</Text>
+              </View>
+              <Text style={styles.guideTitle}>{item.title}</Text>
+              <Text style={styles.guideChevron}>{isOpen ? '▲' : '▼'}</Text>
+            </View>
+            {isOpen && (
+              <Text style={styles.guideDesc}>{item.desc}</Text>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
 export default function MoreScreen({ navigation }) {
   const [services, setServices] = useState([]);
   const [leadership, setLeadership] = useState([]);
@@ -133,13 +203,16 @@ export default function MoreScreen({ navigation }) {
           </View>
         </TouchableOpacity>
       </View>
+      <SectionHeader title="APP GUIDE" />
+      <AppGuide />
+
       <SectionHeader title="ADMIN" />
-<TouchableOpacity
-  style={styles.adminBtn}
-  onPress={() => navigation.navigate('Dashboard')}
->
-  <Text style={styles.adminBtnText}>⚙️  Admin Panel</Text>
-</TouchableOpacity>
+      <TouchableOpacity
+        style={styles.adminBtn}
+        onPress={() => navigation.navigate('Dashboard')}
+      >
+        <Text style={styles.adminBtnText}>⚙️  Admin Panel</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -220,4 +293,29 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  guideWrap: {
+    borderRadius: 12, overflow: 'hidden',
+    borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.white,
+  },
+  guideRow: {
+    padding: 14,
+    borderBottomWidth: 1, borderBottomColor: Colors.border,
+  },
+  guideRowOpen: {
+    backgroundColor: '#F8F9FF',
+  },
+  guideTop: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+  },
+  guideIconBox: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: Colors.background,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  guideIcon:    { fontSize: 18 },
+  guideTitle:   { flex: 1, fontSize: 14, fontWeight: '700', color: Colors.text },
+  guideChevron: { fontSize: 10, color: Colors.textMuted },
+  guideDesc:    { fontSize: 13, color: Colors.textMuted, lineHeight: 20, marginTop: 10, paddingLeft: 48 },
 });

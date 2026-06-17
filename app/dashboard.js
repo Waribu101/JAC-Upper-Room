@@ -669,6 +669,105 @@ function DepartmentsSection() {
   );
 }
 
+// ─── Quotes Section ───────────────────────────────────────
+function QuotesSection() {
+  const [text,      setText]      = useState('');
+  const [reference, setReference] = useState('');
+  const [type,      setType]      = useState('Bible');
+  const [saving,    setSaving]    = useState(false);
+  const [items,     setItems]     = useState([]);
+
+  const TYPES = ['Bible', 'Life'];
+
+  async function load() {
+    const q = query(collection(db, 'quotes'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function handleAdd() {
+    if (!text.trim() || !reference.trim()) return;
+    setSaving(true);
+    await addDoc(collection(db, 'quotes'), {
+      text: text.trim(),
+      reference: reference.trim(),
+      type,
+      createdAt: serverTimestamp(),
+    });
+    setText(''); setReference(''); setType('Bible');
+    await load();
+    setSaving(false);
+  }
+
+  async function handleDelete(id) {
+    await deleteDoc(doc(db, 'quotes', id));
+    await load();
+  }
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel}>Add Quote</Text>
+      <Text style={styles.fieldLabel}>
+        This quote will appear on the Home screen for all app users.
+      </Text>
+
+      <TextInput
+        style={[styles.input, styles.textArea]}
+        placeholder="Quote text (e.g. For God so loved the world…)"
+        placeholderTextColor={Colors.textMuted}
+        value={text}
+        onChangeText={setText}
+        multiline
+        numberOfLines={3}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Reference (e.g. John 3:16 or C.S. Lewis)"
+        placeholderTextColor={Colors.textMuted}
+        value={reference}
+        onChangeText={setReference}
+      />
+
+      <Text style={styles.fieldLabel}>Type</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+        {TYPES.map(t => (
+          <TouchableOpacity
+            key={t}
+            style={[styles.chip, type === t && styles.chipActive]}
+            onPress={() => setType(t)}
+          >
+            <Text style={[styles.chipText, type === t && styles.chipTextActive]}>{t}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
+        {saving
+          ? <ActivityIndicator color={Colors.white} />
+          : <Text style={styles.addButtonText}>+ Add Quote</Text>}
+      </TouchableOpacity>
+
+      <Text style={styles.sectionLabel}>Existing Quotes ({items.length})</Text>
+      {items.length === 0 && (
+        <Text style={styles.emptyHint}>No quotes added yet.</Text>
+      )}
+      {items.map(item => (
+        <View key={item.id} style={styles.listItem}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.listItemTitle} numberOfLines={2}>"{item.text}"</Text>
+            <Text style={styles.listItemSub}>— {item.reference} · {item.type}</Text>
+          </View>
+          <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteBtn}>
+            <Text style={styles.deleteBtnText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 // ─── Main Admin Screen ────────────────────────────────────
 export default function AdminScreen() {
   const [user, setUser] = useState(null);
@@ -701,6 +800,7 @@ export default function AdminScreen() {
     { id: 'leadership', label: '👤' },
     { id: 'services', label: '🕐' },
     { id: 'departments', label: '👥' },
+    { id: 'quotes', label: '💬' },
   ];
 
   return (
@@ -729,6 +829,7 @@ export default function AdminScreen() {
         {activeTab === 'leadership' && <LeadershipSection />}
         {activeTab === 'services' && <ServicesSection />}
         {activeTab === 'departments' && <DepartmentsSection />}
+        {activeTab === 'quotes' && <QuotesSection />}
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>
