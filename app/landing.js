@@ -59,7 +59,7 @@ export default function LandingScreen({ onEnter }) {
 
         {/* Info pills */}
         <View style={s.pillRow}>
-          {['Sunday 10AM', 'Kabati · Thika', 'Bible Study', 'Community'].map(label => (
+          {['Sunday 9 AM', 'Kabati · Thika', 'Spiritual Growth', 'Community'].map(label => (
             <View key={label} style={s.pill}>
               <Text style={s.pillText}>{label}</Text>
             </View>
