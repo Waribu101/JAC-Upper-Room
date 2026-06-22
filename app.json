@@ -4,7 +4,7 @@
     "slug": "jac-upper-room",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/jac-logo.jpg",
+    "icon": "./assets/images/jac-logo.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -24,7 +24,7 @@
       "package": "com.jacupperroom.app"
     },
     "web": {
-      "favicon": "./assets/images/jac-logo.jpg",
+      "favicon": "./assets/images/jac-logo.png",
       "bundler": "metro",
       "name": "JAC Upper Room",
       "shortName": "JAC",
