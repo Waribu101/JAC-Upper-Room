@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#1A2B6B"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jacupperroom.app"
@@ -32,6 +34,11 @@
       "themeColor": "#1A2B6B",
       "backgroundColor": "#1A2B6B"
     },
-    "scheme": "jac-upper-room"
+    "scheme": "jac-upper-room",
+    "extra": {
+      "eas": {
+        "projectId": "a3e689af-157e-49a6-b32e-773a14db4baa"
+      }
+    }
   }
 }
