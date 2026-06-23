@@ -7,10 +7,8 @@
     "icon": "./assets/images/jac-logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1A2B6B"
-    },
+  "backgroundColor": "#1A2B6B"
+},
     "assetBundlePatterns": [
       "**/*"
     ],
