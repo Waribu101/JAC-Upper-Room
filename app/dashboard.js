@@ -4,12 +4,14 @@ import {
   TouchableOpacity, TextInput, ActivityIndicator, Image,
 } from 'react-native';
 import { Colors } from '../constants/colors';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { adminLogin, adminLogout, onAuthChange, adminSignUp } from '../lib/auth';
 import { db } from '../lib/firebase';
 import {
   collection, addDoc, getDocs, deleteDoc,
   doc, orderBy, query, serverTimestamp,
-  setDoc, getDoc,
+  setDoc, getDoc, updateDoc,
 } from 'firebase/firestore';
 
 // ─── Login Screen ─────────────────────────────────────────
@@ -202,12 +204,43 @@ function AnnouncementsSection() {
   );
 }
 
+const PHOTO_MAX_DIM = 700;
+const PHOTO_QUALITY = 0.6;
+
+async function pickAndCompressPhoto() {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    return { success: false, message: 'Permission to access your photos is required.' };
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 1,
+  });
+  if (result.canceled) return { success: false, cancelled: true };
+
+  const asset = result.assets[0];
+  const { width, height } = asset;
+  const actions = (width > PHOTO_MAX_DIM || height > PHOTO_MAX_DIM)
+    ? [width > height ? { resize: { width: PHOTO_MAX_DIM } } : { resize: { height: PHOTO_MAX_DIM } }]
+    : [];
+
+  const manipulated = await ImageManipulator.manipulateAsync(
+    asset.uri,
+    actions,
+    { compress: PHOTO_QUALITY, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+  );
+
+  return { success: true, base64: `data:image/jpeg;base64,${manipulated.base64}` };
+}
+
 // ─── Photos Section ───────────────────────────────────────
 function PhotosSection() {
-  const [url, setUrl] = useState('');
-  const [caption, setCaption] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [items, setItems] = useState([]);
+  const [caption,      setCaption]      = useState('');
+  const [pickedBase64, setPickedBase64] = useState(null);
+  const [picking,      setPicking]      = useState(false);
+  const [saving,       setSaving]       = useState(false);
+  const [msg,          setMsg]          = useState('');
+  const [items,        setItems]        = useState([]);
 
   async function load() {
     const q = query(collection(db, 'media'), orderBy('order', 'asc'));
@@ -217,13 +250,22 @@ function PhotosSection() {
 
   useEffect(() => { load(); }, []);
 
+  async function handlePick() {
+    setMsg(''); setPicking(true);
+    const res = await pickAndCompressPhoto();
+    setPicking(false);
+    if (res.cancelled) return;
+    if (!res.success) { setMsg(res.message || 'Could not process that photo.'); return; }
+    setPickedBase64(res.base64);
+  }
+
   async function handleAdd() {
-    if (!url) return;
+    if (!pickedBase64) { setMsg('Please choose a photo first.'); return; }
     setSaving(true);
     await addDoc(collection(db, 'media'), {
-      type: 'photo', url, caption, order: Date.now(),
+      type: 'photo', photoBase64: pickedBase64, caption, order: Date.now(),
     });
-    setUrl(''); setCaption('');
+    setPickedBase64(null); setCaption(''); setMsg('');
     await load();
     setSaving(false);
   }
@@ -236,17 +278,16 @@ function PhotosSection() {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>Add Photo</Text>
-      <Text style={styles.fieldLabel}>
-        Tip: Upload to Google Drive or Imgur, then paste the direct image link below
-      </Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Photo URL (e.g. https://i.imgur.com/xxx.jpg)"
-        placeholderTextColor={Colors.textMuted}
-        value={url}
-        onChangeText={setUrl}
-        autoCapitalize="none"
-      />
+      <Text style={styles.fieldLabel}>Photos are stored directly in the app — no external links needed.</Text>
+
+      {pickedBase64 && <Image source={{ uri: pickedBase64 }} style={styles.photoPreview} />}
+
+      <TouchableOpacity style={styles.uploadBtn} onPress={handlePick} disabled={picking}>
+        {picking
+          ? <ActivityIndicator color={Colors.primary} />
+          : <Text style={styles.uploadBtnText}>{pickedBase64 ? '📷 Choose a different photo' : '📷 Choose photo from device'}</Text>}
+      </TouchableOpacity>
+
       <TextInput
         style={styles.input}
         placeholder="Caption (optional)"
@@ -254,17 +295,17 @@ function PhotosSection() {
         value={caption}
         onChangeText={setCaption}
       />
-      <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
+      {msg ? <Text style={styles.errorText}>{msg}</Text> : null}
+      <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving || !pickedBase64}>
         {saving ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.addButtonText}>+ Add Photo</Text>}
       </TouchableOpacity>
+
       <Text style={styles.sectionLabel}>Existing Photos</Text>
-      {items.length === 0 && (
-        <Text style={styles.emptyHint}>No photos added yet.</Text>
-      )}
+      {items.length === 0 && <Text style={styles.emptyHint}>No photos added yet.</Text>}
       {items.map(item => (
         <View key={item.id} style={styles.listItem}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.listItemTitle} numberOfLines={1}>{item.url}</Text>
+          <Image source={{ uri: item.photoBase64 || item.url }} style={styles.photoThumb} />
+          <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={styles.listItemSub}>{item.caption || 'No caption'}</Text>
           </View>
           <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteBtn}>
@@ -674,6 +715,7 @@ function QuotesSection() {
   const [text,      setText]      = useState('');
   const [reference, setReference] = useState('');
   const [type,      setType]      = useState('Bible');
+  const [isMotto,   setIsMotto]   = useState(false);
   const [saving,    setSaving]    = useState(false);
   const [items,     setItems]     = useState([]);
 
@@ -690,13 +732,23 @@ function QuotesSection() {
   async function handleAdd() {
     if (!text.trim() || !reference.trim()) return;
     setSaving(true);
+
+    // Only one quote can be the fixed motto — unset any existing one first
+    if (isMotto) {
+      const existingMotto = items.find(i => i.isMotto);
+      if (existingMotto) {
+        await updateDoc(doc(db, 'quotes', existingMotto.id), { isMotto: false });
+      }
+    }
+
     await addDoc(collection(db, 'quotes'), {
       text: text.trim(),
       reference: reference.trim(),
       type,
+      isMotto,
       createdAt: serverTimestamp(),
     });
-    setText(''); setReference(''); setType('Bible');
+    setText(''); setReference(''); setType('Bible'); setIsMotto(false);
     await load();
     setSaving(false);
   }
@@ -706,11 +758,20 @@ function QuotesSection() {
     await load();
   }
 
+  async function handleSetMotto(id) {
+    const existingMotto = items.find(i => i.isMotto);
+    if (existingMotto && existingMotto.id !== id) {
+      await updateDoc(doc(db, 'quotes', existingMotto.id), { isMotto: false });
+    }
+    await updateDoc(doc(db, 'quotes', id), { isMotto: true });
+    await load();
+  }
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>Add Quote</Text>
       <Text style={styles.fieldLabel}>
-        This quote will appear on the Home screen for all app users.
+        All quotes appear in the full quotes list. Mark one as the fixed motto to have it always shown on the Home screen.
       </Text>
 
       <TextInput
@@ -724,7 +785,7 @@ function QuotesSection() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Reference (e.g. John 3:16 or C.S. Lewis)"
+        placeholder="Reference (e.g. Ephesians 4:5 or C.S. Lewis)"
         placeholderTextColor={Colors.textMuted}
         value={reference}
         onChangeText={setReference}
@@ -743,6 +804,13 @@ function QuotesSection() {
         ))}
       </ScrollView>
 
+      <TouchableOpacity style={styles.mottoToggleRow} onPress={() => setIsMotto(!isMotto)}>
+        <View style={[styles.checkbox, isMotto && styles.checkboxActive]}>
+          {isMotto && <Text style={styles.checkboxMark}>✓</Text>}
+        </View>
+        <Text style={styles.mottoToggleText}>Set as fixed motto (e.g. Ephesians 4:5)</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.addButton} onPress={handleAdd} disabled={saving}>
         {saving
           ? <ActivityIndicator color={Colors.white} />
@@ -750,14 +818,19 @@ function QuotesSection() {
       </TouchableOpacity>
 
       <Text style={styles.sectionLabel}>Existing Quotes ({items.length})</Text>
-      {items.length === 0 && (
-        <Text style={styles.emptyHint}>No quotes added yet.</Text>
-      )}
+      {items.length === 0 && <Text style={styles.emptyHint}>No quotes added yet.</Text>}
       {items.map(item => (
         <View key={item.id} style={styles.listItem}>
           <View style={{ flex: 1 }}>
             <Text style={styles.listItemTitle} numberOfLines={2}>"{item.text}"</Text>
-            <Text style={styles.listItemSub}>— {item.reference} · {item.type}</Text>
+            <Text style={styles.listItemSub}>
+              — {item.reference} · {item.type}{item.isMotto ? ' · ⭐ Motto' : ''}
+            </Text>
+            {!item.isMotto && (
+              <TouchableOpacity onPress={() => handleSetMotto(item.id)}>
+                <Text style={styles.editPhotoLink}>⭐ Set as motto</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteBtn}>
             <Text style={styles.deleteBtnText}>✕</Text>
@@ -887,4 +960,13 @@ switchModeText: { color: Colors.primary, fontSize: 13, textAlign: 'center', marg
   editPhotoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
   savePhotoBtn: { backgroundColor: Colors.primary, borderRadius: 8, paddingVertical: 10, paddingHorizontal: 14 },
   savePhotoBtnText: { color: Colors.white, fontSize: 13, fontWeight: '700' },
+  mottoToggleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
+checkboxActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+checkboxMark: { color: Colors.white, fontSize: 13, fontWeight: '700' },
+mottoToggleText: { fontSize: 13, color: Colors.text, fontWeight: '500', flex: 1 },
+uploadBtn: { backgroundColor: Colors.background, borderRadius: 10, borderWidth: 1, borderColor: Colors.primary, paddingVertical: 12, alignItems: 'center', marginBottom: 12 },
+uploadBtnText: { color: Colors.primary, fontSize: 14, fontWeight: '700' },
+photoPreview: { width: '100%', height: 180, borderRadius: 10, marginBottom: 12, backgroundColor: Colors.border },
+photoThumb: { width: 48, height: 48, borderRadius: 8 },
 });

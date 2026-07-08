@@ -72,12 +72,8 @@ function PhotoGrid({ photos }) {
       {photos.map(item => (
         <TouchableOpacity key={item.id} style={styles.photoCell} activeOpacity={0.8}>
           <Image
-  source={{ uri: getDriveImageUrl(item.url) }}
-  style={{
-    width: '100%',
-    height: '100%',
-    borderRadius: 10,
-  }}
+  source={{ uri: item.photoBase64 || getDriveImageUrl(item.url) }}
+  style={{ width: '100%', height: '100%', borderRadius: 10 }}
   resizeMode="cover"
 />
           {item.caption ? (
