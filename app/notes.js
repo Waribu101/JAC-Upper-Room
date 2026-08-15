@@ -7,7 +7,7 @@ import {
   collection, addDoc, getDocs, deleteDoc,
   doc, orderBy, query, serverTimestamp,
 } from 'firebase/firestore';
-import { signInAnonymously } from 'firebase/auth';
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 import { Colors } from '../constants/colors';
 
@@ -27,17 +27,23 @@ export default function NotesScreen() {
   const [body,    setBody]    = useState('');
   const [saving,  setSaving]  = useState(false);
 
-  // Sign in anonymously on mount
+  // Restore existing session if one exists (persisted via AsyncStorage in
+  // lib/firebase.js). Only sign in anonymously if there's truly no user yet.
+  // This is what keeps the same UID — and therefore the same saved notes —
+  // across app restarts.
   useEffect(() => {
-    signInAnonymously(auth)
-      .then(cred => {
-        setUid(cred.user.uid);
-        loadNotes(cred.user.uid);
-      })
-      .catch(err => {
-        console.error('Anon auth failed:', err);
-        setLoading(false);
-      });
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUid(user.uid);
+        loadNotes(user.uid);
+      } else {
+        signInAnonymously(auth).catch(err => {
+          console.error('Anon auth failed:', err);
+          setLoading(false);
+        });
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const loadNotes = async (userId) => {
