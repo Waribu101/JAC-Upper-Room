@@ -2,9 +2,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from './constants/colors';
-import { AuthProvider } from './lib/authContext';
+import { AuthProvider, useAuth } from './lib/authContext';
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, Animated, StyleSheet } from 'react-native';
+import { View, Text, Animated, StyleSheet, ActivityIndicator } from 'react-native';
 
 import HomeScreen from './app/index';
 import LandingScreen from './app/landing';
@@ -15,6 +15,7 @@ import MoreScreen from './app/more';
 import DashboardScreen from './app/dashboard';
 import NotesScreen from './app/notes';
 import BibleScreen from './app/bible';
+import AuthGate from './app/authGate';
 
 
 const Tab = createBottomTabNavigator();
@@ -206,6 +207,41 @@ const splash = StyleSheet.create({
   },
 });
 
+// Sits inside AuthProvider so it can read live auth state. Shows a small
+// loader while Firebase resolves the session, AuthGate (login/signup) when
+// signed out, and the real app once a user session exists — admin or member,
+// isAdmin just determines whether the Dashboard tab does anything once inside.
+function AuthedApp() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={authLoading.container}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return <AuthGate />;
+  }
+
+  return (
+    <NavigationContainer>
+      <MainTabs />
+    </NavigationContainer>
+  );
+}
+
+const authLoading = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+  },
+});
+
 export default function App() {
   const [showSplash,   setShowSplash]   = useState(true);
   const [showLanding,  setShowLanding]  = useState(true);
@@ -220,9 +256,7 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <NavigationContainer>
-        <MainTabs />
-      </NavigationContainer>
+      <AuthedApp />
     </AuthProvider>
   );
 }
